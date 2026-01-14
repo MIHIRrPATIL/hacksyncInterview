@@ -70,9 +70,24 @@ export default function Dashboard() {
   };
 
   const handleCreateRoom = () => {
+    console.log('handleCreateRoom called');
     const roomId = Math.random().toString(36).substring(2, 9).toUpperCase();
     const configQuery = encodeURIComponent(JSON.stringify(config));
-    router.push(`/interview/${roomId}?username=${encodeURIComponent(username)}&config=${configQuery}`);
+    const targetUrl = `/interview/${roomId}?username=${encodeURIComponent(username)}&config=${configQuery}`;
+    console.log('Navigating to:', targetUrl);
+    console.log('Config:', config);
+    
+    try {
+      router.push(targetUrl);
+      console.log('router.push executed');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      toaster.create({
+        title: "Navigation Error",
+        description: "Failed to navigate to interview room",
+        type: "error",
+      });
+    }
   };
 
   const handleJoinRoom = async () => {
