@@ -11,7 +11,8 @@ import {
   Info, 
   Users,
   Trophy,
-  Brain
+  Brain,
+  Sparkles
 } from "lucide-react";
 
 import { MultiStepForm } from "@/components/ui/multi-step-form";
@@ -26,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toaster } from "@/components/ui/toaster";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -46,7 +48,11 @@ export default function Dashboard() {
 
   const handleNext = () => {
     if (currentStep === 1 && !username.trim()) {
-      alert("Please enter your name first!");
+      toaster.create({
+        title: "Name Required",
+        description: "Please enter your name before continuing.",
+        type: "warning",
+      });
       return;
     }
     if (currentStep < totalSteps) {
@@ -69,11 +75,19 @@ export default function Dashboard() {
 
   const handleJoinRoom = async () => {
     if (!username.trim()) {
-      alert("Please enter a username first!");
+      toaster.create({
+        title: "Profile Missing",
+        description: "Please enter a username first!",
+        type: "warning",
+      });
       return;
     }
     if (!roomToJoin.trim()) {
-      alert("Please enter a Room ID!");
+      toaster.create({
+        title: "Room ID Required",
+        description: "Please enter a Room ID to join.",
+        type: "warning",
+      });
       return;
     }
 
@@ -82,11 +96,19 @@ export default function Dashboard() {
       if (res.ok) {
         router.push(`/interview/${roomToJoin.toUpperCase()}?username=${encodeURIComponent(username)}`);
       } else {
-        alert("This Room ID does not exist! Please check the code or create a new room.");
+        toaster.create({
+          title: "Room Not Found",
+          description: "This Room ID does not exist. Please check the code or create a new room.",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Error checking room:", error);
-      alert("Failed to connect to the server. Is the backend running?");
+      toaster.create({
+        title: "Connection Error",
+        description: "Failed to connect to the server. Is the backend running?",
+        type: "error",
+      });
     }
   };
 
@@ -96,12 +118,15 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center justify-center font-sans bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black">
+    <div className="min-h-screen bg-white text-black p-4 flex flex-col items-center justify-center font-sans bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-orange-100/50 via-white to-white">
       <div className="absolute top-10 flex flex-col items-center">
-         <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500 mb-2">
-            SKILLSPHERE
-         </h1>
-         <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full" />
+         <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="w-6 h-6 text-orange-500 fill-orange-500" />
+            <h1 className="text-4xl font-black tracking-tighter text-black">
+               SKILLSPHERE
+            </h1>
+         </div>
+         <div className="h-1 w-24 bg-orange-500 rounded-full" />
       </div>
 
       <MultiStepForm
@@ -113,10 +138,10 @@ export default function Dashboard() {
         onNext={handleNext}
         size="lg"
         nextButtonText={currentStep === totalSteps ? "Create & Launch" : "Continue"}
-        className="bg-gray-900/40 backdrop-blur-2xl border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+        className="bg-white border-orange-100 shadow-[0_20px_50px_rgba(249,115,22,0.1)]"
         footerContent={
-          <div className="flex items-center gap-1 text-xs text-gray-500 uppercase tracking-widest font-bold">
-            SkillSphere <span className="text-blue-500">v1.2</span>
+          <div className="flex items-center gap-1 text-xs text-black/40 uppercase tracking-widest font-bold">
+            SkillSphere <span className="text-orange-500">v1.2</span>
           </div>
         }
       >
@@ -125,17 +150,17 @@ export default function Dashboard() {
           <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-right-10 duration-500">
             <div className="space-y-4">
               <div className="flex items-center gap-3 mb-2">
-                 <div className="p-2 bg-blue-500/10 rounded-lg"><User className="w-5 h-5 text-blue-400" /></div>
-                 <Label htmlFor="username" className="text-lg font-bold">Display Name</Label>
+                 <div className="p-2 bg-orange-50 rounded-lg"><User className="w-5 h-5 text-orange-600" /></div>
+                 <Label htmlFor="username" className="text-lg font-bold text-black">Display Name</Label>
               </div>
               <Input
                 id="username"
                 placeholder="How should others see you?"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="h-14 bg-gray-800/40 border-gray-700 text-lg focus-visible:ring-blue-500/30"
+                className="h-14 bg-gray-50 border-gray-200 text-lg text-black focus-visible:ring-orange-500/30 focus-visible:border-orange-500 placeholder:text-black/30"
               />
-              <p className="text-sm text-gray-500 italic">This name will be displayed in the lobby and result board.</p>
+              <p className="text-sm text-black/50 italic font-medium">This name will be displayed in the lobby and result board.</p>
             </div>
           </div>
         )}
@@ -146,11 +171,11 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                   <div className="p-2 bg-purple-500/10 rounded-lg"><Settings className="w-5 h-5 text-purple-400" /></div>
-                   <Label>Interview Focus</Label>
+                   <div className="p-2 bg-orange-50 rounded-lg"><Settings className="w-5 h-5 text-orange-600" /></div>
+                   <Label className="text-black font-bold">Interview Focus</Label>
                 </div>
                 <Select value={config.type} onValueChange={(v) => setConfig({...config, type: v})}>
-                  <SelectTrigger className="h-12 bg-gray-800/40 border-gray-700">
+                  <SelectTrigger className="h-12 bg-gray-50 border-gray-200 text-black">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -163,8 +188,8 @@ export default function Dashboard() {
 
               <div className="space-y-4">
                  <div className="flex items-center gap-3">
-                   <div className="p-2 bg-green-500/10 rounded-lg"><Users className="w-5 h-5 text-green-400" /></div>
-                   <Label>Participant Capacity</Label>
+                   <div className="p-2 bg-orange-50 rounded-lg"><Users className="w-5 h-5 text-orange-600" /></div>
+                   <Label className="text-black font-bold">Participant Capacity</Label>
                 </div>
                 <Input
                   type="number"
@@ -172,23 +197,23 @@ export default function Dashboard() {
                   max="20"
                   value={config.capacity.toString()}
                   onChange={(e) => handleNumericChange('capacity', e.target.value)}
-                  className="h-12 bg-gray-800/40 border-gray-700"
+                  className="h-12 bg-gray-50 border-gray-200 text-black"
                 />
               </div>
             </div>
 
             <div className="space-y-4">
-               <Label>Difficulty Level</Label>
+               <Label className="text-black font-bold">Difficulty Level</Label>
                <div className="grid grid-cols-3 gap-3">
                   {['Easy', 'Medium', 'Hard'].map((d) => (
                     <Button
                       key={d}
                       variant={config.difficulty === d.toLowerCase() ? 'default' : 'outline'}
                       onClick={() => setConfig({ ...config, difficulty: d.toLowerCase() })}
-                      className={`h-14 rounded-xl border-2 transition-all ${
+                      className={`h-14 rounded-xl border-2 transition-all font-black ${
                         config.difficulty === d.toLowerCase()
-                          ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                          : 'border-gray-800 bg-transparent text-gray-500 hover:border-gray-700'
+                          ? 'border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200'
+                          : 'border-gray-100 bg-gray-50/50 text-black hover:border-orange-200 hover:bg-orange-50/30'
                       }`}
                     >
                       {d}
@@ -202,56 +227,56 @@ export default function Dashboard() {
         {/* Step 3: Content Setup */}
         {currentStep === 3 && (
           <div className="space-y-8 pt-4">
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-gray-800/40 to-black border border-gray-800 flex items-center justify-between">
+            <div className="p-6 rounded-2xl bg-orange-50/50 border border-orange-100 flex items-center justify-between">
                <div className="flex items-center gap-4">
-                  <div className={`p-4 rounded-2xl transition-all ${config.includeDSA ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)]' : 'bg-gray-800 text-gray-400'}`}>
+                  <div className={`p-4 rounded-2xl transition-all ${config.includeDSA ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-gray-200 text-black'}`}>
                      <Code className="w-8 h-8" />
                   </div>
                   <div>
-                     <h3 className="text-xl font-black">Coding Challenges</h3>
-                     <p className="text-sm text-gray-500">Include real-time DSA coding round</p>
+                     <h3 className="text-xl font-black text-black">Coding Challenges</h3>
+                     <p className="text-sm text-black/60 font-medium">Include real-time DSA coding round</p>
                   </div>
                </div>
                <Button 
                  variant={config.includeDSA ? 'default' : 'outline'}
                  onClick={() => setConfig({...config, includeDSA: !config.includeDSA})}
-                 className={`w-28 rounded-xl ${config.includeDSA ? 'bg-blue-600 hover:bg-blue-500' : ''}`}
+                 className={`w-28 h-12 rounded-xl font-black ${config.includeDSA ? 'bg-orange-500 hover:bg-orange-600' : 'border-gray-200 text-black'}`}
                >
                  {config.includeDSA ? 'ENABLED' : 'DISABLED'}
                </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 italic">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                    <div className="flex items-center gap-3">
-                      <Trophy className="w-5 h-5 text-yellow-500" />
-                      <Label>DSA Question Count</Label>
+                      <Trophy className="w-5 h-5 text-orange-500" />
+                      <Label className="text-black font-bold">DSA Question Count</Label>
                    </div>
                    <Input 
                       type="number"
                       disabled={!config.includeDSA}
                       value={config.includeDSA ? config.dsaCount : 0}
                       onChange={(e) => handleNumericChange('dsaCount', e.target.value)}
-                      className="h-12 bg-gray-800/40 border-gray-700 disabled:opacity-20"
+                      className="h-12 bg-gray-50 border-gray-200 text-black disabled:opacity-20"
                    />
                 </div>
                 <div className="space-y-4">
                    <div className="flex items-center gap-3">
-                      <Brain className="w-5 h-5 text-pink-500" />
-                      <Label>Viva/Voice Count</Label>
+                      <Brain className="w-5 h-5 text-orange-400" />
+                      <Label className="text-black font-bold">Viva/Voice Count</Label>
                    </div>
                    <Input 
                       type="number"
                       value={config.vivaCount}
                       onChange={(e) => handleNumericChange('vivaCount', e.target.value)}
-                      className="h-12 bg-gray-800/40 border-gray-700"
+                      className="h-12 bg-gray-50 border-gray-200 text-black"
                    />
                 </div>
             </div>
 
-            <Alert className="bg-blue-500/5 border-blue-500/20 text-blue-400">
-               <Info className="w-4 h-4" />
-               <AlertDescription>
+            <Alert className="bg-orange-50 border-orange-200 text-orange-700">
+               <Info className="w-4 h-4 text-orange-600" />
+               <AlertDescription className="font-bold">
                   SkillSphere AI will automatically generate questions based on these parameters.
                </AlertDescription>
             </Alert>
@@ -264,7 +289,7 @@ export default function Dashboard() {
           {!showJoinInput ? (
               <button 
                 onClick={() => setShowJoinInput(true)}
-                className="text-gray-500 hover:text-white transition-colors flex items-center gap-2 group"
+                className="text-black/50 hover:text-orange-600 transition-colors flex items-center gap-2 group font-black uppercase tracking-widest text-xs"
               >
                 Join existing room <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </button>
@@ -274,13 +299,13 @@ export default function Dashboard() {
                     placeholder="ENTER SECRET ROOM ID"
                     value={roomToJoin}
                     onChange={(e) => setRoomToJoin(e.target.value.toUpperCase())}
-                    className="h-14 bg-gray-900 border-gray-700 text-center font-black tracking-widest text-blue-400 placeholder:text-gray-700"
+                    className="h-14 bg-white border-orange-200 text-center font-black tracking-widest text-orange-600 placeholder:text-gray-200"
                   />
-                  <Button onClick={handleJoinRoom} className="h-14 px-8 bg-blue-600 hover:bg-blue-500 font-black">JOIN</Button>
-                  <Button variant="ghost" className="h-14 text-gray-600" onClick={() => setShowJoinInput(false)}>✕</Button>
+                  <Button onClick={handleJoinRoom} className="h-14 px-8 bg-orange-500 hover:bg-orange-600 font-black text-white shadow-lg shadow-orange-100">JOIN</Button>
+                  <Button variant="ghost" className="h-14 text-black/30 hover:text-orange-600" onClick={() => setShowJoinInput(false)}>✕</Button>
               </div>
           )}
-          <p className="text-[10px] text-gray-700 uppercase tracking-[0.4em] font-black">Advanced Agentic Coding Interface</p>
+          <p className="text-[10px] text-black/20 uppercase tracking-[0.4em] font-black">Advanced Agentic Coding Interface</p>
       </div>
     </div>
   );

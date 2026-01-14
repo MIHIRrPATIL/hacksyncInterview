@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Waveform from './Waveform';
-import { Mic, MicOff, CheckCircle } from 'lucide-react';
+import { Mic, MicOff, CheckCircle, Radio } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const VoiceArena = () => {
   const [isAiSpeaking, setIsAiSpeaking] = useState(true);
@@ -20,15 +21,15 @@ const VoiceArena = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] bg-gray-950 text-white p-8">
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] bg-white text-black p-8 bg-[radial-gradient(circle_at_bottom_left,var(--tw-gradient-stops))] from-orange-50/50 via-white to-white">
       {/* AI Visualizer Stage */}
-      <div className="flex flex-col items-center mb-12">
-        <div className={`w-48 h-48 rounded-full border-4 flex items-center justify-center transition-all duration-500 mb-6 ${
-          isAiSpeaking ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_50px_rgba(59,130,246,0.2)]' : 'border-gray-800 bg-transparent'
+      <div className="flex flex-col items-center mb-12 animate-in fade-in zoom-in duration-700">
+        <div className={`w-56 h-56 rounded-full border-4 flex items-center justify-center transition-all duration-500 mb-6 bg-white ${
+          isAiSpeaking ? 'border-orange-500 shadow-[0_0_60px_rgba(249,115,22,0.15)] bg-orange-50/10' : 'border-gray-100'
         }`}>
-          <div className="text-center">
-            <div className={`text-xs font-bold uppercase tracking-widest mb-2 ${isAiSpeaking ? 'text-blue-400' : 'text-gray-500'}`}>
-              {isAiSpeaking ? 'Interviewer Speaking' : 'Listening...'}
+          <div className="text-center flex flex-col items-center">
+            <div className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 ${isAiSpeaking ? 'text-orange-600' : 'text-black/30'}`}>
+              {isAiSpeaking ? 'AI Interviewer' : 'System Ready'}
             </div>
             <Waveform isActive={isAiSpeaking} />
           </div>
@@ -36,47 +37,56 @@ const VoiceArena = () => {
       </div>
       
       {/* Transcript & Controls */}
-      <div className="w-full max-w-2xl flex flex-col gap-6">
-        <div className="bg-gray-900/50 border border-gray-800 p-8 rounded-3xl backdrop-blur-md">
-          <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-6">Live Transcript</h3>
-          <div className="h-64 overflow-y-auto space-y-6 pr-4 custom-scrollbar">
+      <div className="w-full max-w-2xl flex flex-col gap-8">
+        <div className="bg-white border border-orange-100 p-10 rounded-4xl shadow-[0_20px_60px_rgba(249,115,22,0.05)]">
+          <div className="flex items-center justify-between mb-8 border-b border-gray-50 pb-4">
+             <h3 className="text-black/30 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+                <Radio className="w-3 h-3 text-orange-500" />
+                Live Analysis
+             </h3>
+             <div className="flex gap-1">
+                {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 bg-orange-200 rounded-full" />)}
+             </div>
+          </div>
+
+          <div className="h-72 overflow-y-auto space-y-8 pr-4 custom-scrollbar">
             {transcript.map((line, i) => (
-              <div key={i} className={`flex ${line.role === 'ai' ? 'justify-start' : 'justify-end'}`}>
-                 <div className={`max-w-[80%] p-4 rounded-2xl text-lg leading-relaxed ${
+              <div key={i} className={`flex ${line.role === 'ai' ? 'justify-start' : 'justify-end'} animate-in slide-in-from-bottom-2 duration-500`}>
+                 <div className={`max-w-[85%] p-6 rounded-3xl text-lg leading-relaxed font-black ${
                    line.role === 'ai' 
-                   ? 'bg-blue-500/10 border border-blue-500/20 text-blue-100' 
-                   : 'bg-gray-800 border border-gray-700 text-gray-200'
+                   ? 'bg-orange-50 border border-orange-100 text-black shadow-sm' 
+                   : 'bg-white border border-gray-100 text-black/70 shadow-sm'
                  }`}>
                    {line.text}
                  </div>
               </div>
             ))}
             {!isAiSpeaking && (
-              <div className="flex justify-end">
-                <div className="bg-gray-800/50 border border-dashed border-gray-600 p-4 rounded-2xl text-gray-500 italic flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-                  Your turn to speak...
+              <div className="flex justify-end animate-pulse">
+                <div className="bg-orange-50/50 border border-dashed border-orange-200 px-6 py-4 rounded-3xl text-orange-600 text-sm font-black italic flex items-center gap-3">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-ping" />
+                  Please explain your logic...
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-6">
           <button 
             onClick={() => setIsMicOn(!isMicOn)}
-            className={`p-4 rounded-full border transition-all ${
+            className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all ${
               isMicOn 
-              ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' 
-              : 'bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500/20'
+              ? 'bg-white border-gray-100 text-black/20 hover:border-orange-300 hover:text-orange-500 shadow-sm' 
+              : 'bg-red-50 border-red-100 text-red-500 hover:bg-red-100 shadow-lg shadow-red-100'
             }`}
           >
             {isMicOn ? <Mic size={24} /> : <MicOff size={24} />}
           </button>
           
-          <button className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-900/20 transition-all">
-             <CheckCircle size={20} /> Finish Interview
-          </button>
+          <Button className="px-10 h-16 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-3xl flex items-center gap-2 shadow-xl shadow-orange-100 transition-all text-lg">
+             <CheckCircle size={22} /> FINISH INTERVIEW
+          </Button>
         </div>
       </div>
 
@@ -88,7 +98,7 @@ const VoiceArena = () => {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #333;
+          background: #ffe7d9;
           border-radius: 10px;
         }
       `}</style>

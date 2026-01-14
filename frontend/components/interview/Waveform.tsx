@@ -17,12 +17,12 @@ const Waveform = ({ isActive }: { isActive: boolean }) => {
   }, [isActive]);
 
   return (
-    <div className="flex items-center gap-1 h-16">
+    <div className="flex items-center gap-1 h-12">
       {bars.map((height, i) => (
         <div
           key={i}
           className={`w-1 rounded-full transition-all duration-100 ${
-            isActive ? 'bg-blue-400' : 'bg-gray-700'
+            isActive ? 'bg-orange-500' : 'bg-gray-200'
           }`}
           style={{ height: `${height}%` }}
         />

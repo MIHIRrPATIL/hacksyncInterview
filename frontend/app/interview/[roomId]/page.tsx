@@ -8,7 +8,6 @@ import Lobby from '@/components/interview/Lobby';
 import CodingArena from '@/components/interview/CodingArena';
 import VoiceArena from '@/components/interview/VoiceArena';
 
-// In a real environment, this would be an environment variable
 const SOCKET_URL = 'http://localhost:5000';
 
 export default function InterviewPage({ params: paramsPromise }: { params: Promise<{ roomId: string }> }) {
@@ -25,6 +24,7 @@ export default function InterviewPage({ params: paramsPromise }: { params: Promi
     title: "Two Sum", 
     description: "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`." 
   });
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const newSocket = io(SOCKET_URL);
@@ -40,7 +40,6 @@ export default function InterviewPage({ params: paramsPromise }: { params: Promi
     newSocket.on('start-interview', (room) => {
       setParticipants(room.participants);
       setPhase('coding');
-      // Sync problem if provided by backend
     });
 
     return () => {
@@ -62,14 +61,15 @@ export default function InterviewPage({ params: paramsPromise }: { params: Promi
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       <InterviewNavbar 
         roomId={roomId} 
         phase={phase} 
         timeRemaining={timeRemaining} 
+        isDarkMode={isDarkMode && phase === 'coding'}
       />
       
-      <main>
+      <main className="animate-in fade-in duration-500">
         {phase === 'lobby' && (
            <Lobby 
              roomId={roomId} 
@@ -77,7 +77,13 @@ export default function InterviewPage({ params: paramsPromise }: { params: Promi
              onReady={handleReady} 
            />
         )}
-        {phase === 'coding' && <CodingArena problem={problem} />}
+        {phase === 'coding' && (
+          <CodingArena 
+            problem={problem} 
+            isDarkMode={isDarkMode} 
+            setIsDarkMode={setIsDarkMode} 
+          />
+        )}
         {phase === 'voice' && <VoiceArena />}
       </main>
     </div>
