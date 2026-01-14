@@ -42,6 +42,7 @@ export default function Dashboard() {
     dsaCount: 2,
     vivaCount: 3,
     difficulty: 'medium',
+    duration: 'auto', // minutes
   });
 
   const totalSteps = 3;
@@ -70,7 +71,8 @@ export default function Dashboard() {
 
   const handleCreateRoom = () => {
     const roomId = Math.random().toString(36).substring(2, 9).toUpperCase();
-    router.push(`/interview/${roomId}?username=${encodeURIComponent(username)}`);
+    const configQuery = encodeURIComponent(JSON.stringify(config));
+    router.push(`/interview/${roomId}?username=${encodeURIComponent(username)}&config=${configQuery}`);
   };
 
   const handleJoinRoom = async () => {
@@ -91,10 +93,12 @@ export default function Dashboard() {
       return;
     }
 
+    const cleanedRoomId = roomToJoin.trim().toUpperCase();
+
     try {
-      const res = await fetch(`http://localhost:5000/api/rooms/${roomToJoin.toUpperCase()}`);
+      const res = await fetch(`http://localhost:5000/api/rooms/${cleanedRoomId}`);
       if (res.ok) {
-        router.push(`/interview/${roomToJoin.toUpperCase()}?username=${encodeURIComponent(username)}`);
+        router.push(`/interview/${cleanedRoomId}?username=${encodeURIComponent(username)}`);
       } else {
         toaster.create({
           title: "Room Not Found",
@@ -202,24 +206,43 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="space-y-4">
-               <Label className="text-black font-bold">Difficulty Level</Label>
-               <div className="grid grid-cols-3 gap-3">
-                  {['Easy', 'Medium', 'Hard'].map((d) => (
-                    <Button
-                      key={d}
-                      variant={config.difficulty === d.toLowerCase() ? 'default' : 'outline'}
-                      onClick={() => setConfig({ ...config, difficulty: d.toLowerCase() })}
-                      className={`h-14 rounded-xl border-2 transition-all font-black ${
-                        config.difficulty === d.toLowerCase()
-                          ? 'border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200'
-                          : 'border-gray-100 bg-gray-50/50 text-black hover:border-orange-200 hover:bg-orange-50/30'
-                      }`}
-                    >
-                      {d}
-                    </Button>
-                  ))}
-               </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                 <Label className="text-black font-bold">Interview Duration</Label>
+                 <Select value={config.duration} onValueChange={(v) => setConfig({...config, duration: v})}>
+                    <SelectTrigger className="h-12 bg-gray-50 border-gray-200 text-black">
+                      <SelectValue placeholder="Auto (Based on questions)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto (Calculate for me)</SelectItem>
+                      <SelectItem value="15">15 Minutes (Express)</SelectItem>
+                      <SelectItem value="30">30 Minutes (Standard)</SelectItem>
+                      <SelectItem value="45">45 Minutes (Extended)</SelectItem>
+                      <SelectItem value="60">60 Minutes (Intensive)</SelectItem>
+                    </SelectContent>
+                 </Select>
+                 <p className="text-[10px] text-black/40 font-bold uppercase tracking-wider">Calculates 15m/DSA + 5m/Voice if Auto</p>
+              </div>
+
+              <div className="space-y-4">
+                 <Label className="text-black font-bold">Difficulty Level</Label>
+                 <div className="grid grid-cols-3 gap-3">
+                    {['Easy', 'Medium', 'Hard'].map((d) => (
+                      <Button
+                        key={d}
+                        variant={config.difficulty === d.toLowerCase() ? 'default' : 'outline'}
+                        onClick={() => setConfig({ ...config, difficulty: d.toLowerCase() })}
+                        className={`h-12 rounded-xl border-2 transition-all font-black text-xs ${
+                          config.difficulty === d.toLowerCase()
+                            ? 'border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200'
+                            : 'border-gray-100 bg-gray-50/50 text-black hover:border-orange-200 hover:bg-orange-50/30'
+                        }`}
+                      >
+                        {d}
+                      </Button>
+                    ))}
+                 </div>
+              </div>
             </div>
           </div>
         )}

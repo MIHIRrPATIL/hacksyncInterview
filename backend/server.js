@@ -26,6 +26,7 @@ init(io);
 // Check if room exists
 app.get('/api/rooms/:roomId', (req, res) => {
     const { roomId } = req.params;
+    console.log(`Checking existence for room: ${roomId}. Available rooms:`, Array.from(rooms.keys()));
     if (rooms.has(roomId)) {
         res.json({ exists: true });
     } else {

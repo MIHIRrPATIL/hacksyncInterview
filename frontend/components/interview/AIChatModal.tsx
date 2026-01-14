@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Sparkles, Brain, Code, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CodeBlock, CodeBlockCode, CodeBlockGroup } from '@/components/ui/code-block';
+import { Check, Copy } from 'lucide-react';
+import { toaster } from '@/components/ui/toaster';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -160,17 +163,52 @@ export default function AIChatModal({ isOpen, onClose, currentCode, problem }: A
 
         {/* Chat Area */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-           {messages.map((m, i) => (
-             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] p-4 rounded-2xl ${
-                  m.role === 'user' 
-                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/10 rounded-tr-none' 
-                  : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-black dark:text-white rounded-tl-none shadow-sm'
-                }`}>
-                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</p>
-                </div>
-             </div>
-           ))}
+           {messages.map((m, i) => {
+             const parts = m.content.split(/(```[\s\S]*?```)/g);
+             
+             return (
+               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[90%] p-4 rounded-2xl ${
+                    m.role === 'user' 
+                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/10 rounded-tr-none' 
+                    : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-black dark:text-white rounded-tl-none shadow-sm'
+                  }`}>
+                     <div className="space-y-4">
+                        {parts.map((part, index) => {
+                          if (part.startsWith('```')) {
+                            const match = part.match(/```(\w+)?\n?([\s\S]*?)```/);
+                            const lang = match?.[1] || 'tsx';
+                            const codeStr = match?.[2] || '';
+                            
+                            return (
+                              <div key={index} className="my-2">
+                                <CodeBlock className="border-gray-100 dark:border-gray-800">
+                                  <CodeBlockGroup className="border-b border-gray-100 dark:border-gray-800 py-1 px-3">
+                                    <span className="text-[10px] font-bold uppercase text-orange-500">{lang}</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 hover:bg-orange-500/10"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(codeStr);
+                                        toaster.create({ title: "Copied", type: "success" });
+                                      }}
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </CodeBlockGroup>
+                                  <CodeBlockCode code={codeStr} language={lang} theme={m.role === 'user' ? 'github-dark' : 'github-light'} />
+                                </CodeBlock>
+                              </div>
+                            );
+                          }
+                          return <p key={index} className="text-sm leading-relaxed whitespace-pre-wrap">{part}</p>;
+                        })}
+                     </div>
+                  </div>
+               </div>
+             );
+           })}
            {isLoading && (
               <div className="flex justify-start">
                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4 rounded-2xl rounded-tl-none animate-pulse">
