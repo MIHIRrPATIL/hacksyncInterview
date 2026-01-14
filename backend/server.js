@@ -84,9 +84,10 @@ app.get('/api/rooms/:roomId', (req, res) => {
 
 // Get all available rooms
 app.get('/api/rooms', (req, res) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const availableRooms = Array.from(rooms.values()).map(room => ({
         roomId: room.id,
-        link: `http://localhost:3000/interview/${room.id}`,
+        link: `${frontendUrl}/interview/${room.id}`,
         hostCandidateName: room.participants.length > 0 ? room.participants[0].name : "Waiting for Host...",
         participantCount: room.participants.length,
         status: room.status
