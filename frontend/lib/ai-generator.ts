@@ -127,70 +127,105 @@ export async function generateInterviewContent(config: {
     }
 }
 
+const generateDriverCode = (code: string, language: string, testCases: any[]) => {
+    // Basic parser for inputs
+    const parseInput = (inputStr: string) => {
+        return inputStr.split(',').map(part => {
+            const eqParts = part.split('=');
+            return eqParts.length > 1 ? eqParts[1].trim() : eqParts[0].trim();
+        }).join(', ');
+    };
+
+    if (language === 'javascript') {
+        let driver = code + "\n\n// Driver Code\n";
+        testCases.forEach((tc) => {
+            driver += `try { console.log("---TEST-CASE-START---"); const res = solution(${parseInput(tc.input)}); console.log("---RVAL---"); console.log(JSON.stringify(res)); } catch(e) { console.log(e.message); }\n`;
+        });
+        return driver;
+    } else if (language === 'python') {
+        let driver = code + "\n\n# Driver Code\nimport json\n";
+        testCases.forEach((tc) => {
+            driver += `print("---TEST-CASE-START---")\ntry:\n    res = solution(${parseInput(tc.input)})\n    print("---RVAL---")\n    print(json.dumps(res))\nexcept Exception as e:\n    print(str(e))\n`;
+        });
+        return driver;
+    } else if (language === 'cpp') {
+        return code;
+    }
+    return code;
+};
+
 export async function evaluateCode(params: {
     code: string;
     language: string;
     testCases: Array<{ input: string; output: string }>;
     problemTitle: string;
 }) {
-    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-    if (!apiKey) throw new Error("API key missing");
-
-    const prompt = `
-    You are a high-speed code execution sandbox and compiler for ${params.language}.
-    Evaluate the following solution for the problem "${params.problemTitle}".
-    
-    CODE:
-    ${params.code}
-    
-    TEST CASES:
-    ${JSON.stringify(params.testCases, null, 2)}
-    
-    INSTRUCTIONS:
-    1. Check if the code compiles/has syntax errors. Be specific like a real compiler.
-    2. If it compiles, "run" it against the test cases provided.
-    3. Return a JSON object with:
-       - "success": boolean (true if all tests pass and no errors)
-       - "results": array of { "input": string, "expected": string, "actual": string, "passed": boolean }
-       - "compilerOutput": string (stdout/stderr or error messages)
-
-    STRICT JSON ONLY RESPONSE.
-    `;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s for eval
-
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const fullCode = generateDriverCode(params.code, params.language, params.testCases);
+
+        const response = await fetch("http://localhost:5000/api/execute", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
-                "HTTP-Referer": "http://localhost:3000",
-                "X-Title": "SkillSphere Code Runner",
             },
             body: JSON.stringify({
-                model: "xiaomi/mimo-v2-flash:free",
-                messages: [{ role: "user", content: prompt }]
+                language: params.language,
+                code: fullCode
             }),
-            signal: controller.signal
         });
 
-        clearTimeout(timeoutId);
-        const data = await response.json();
-        const rawContent = data.choices?.[0]?.message?.content || "{}";
-
-        let cleanJson = rawContent;
-        const firstBrace = rawContent.indexOf('{');
-        const lastBrace = rawContent.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1) {
-            cleanJson = rawContent.substring(firstBrace, lastBrace + 1);
+        if (!response.ok) {
+            throw new Error(`Execution Service Error: ${response.statusText}`);
         }
 
-        return JSON.parse(cleanJson);
+        const data = await response.json();
+
+        const rawOutput = data.run?.output || data.output || "";
+        const exitCode = data.run?.code;
+
+        const parts = rawOutput.split("---TEST-CASE-START---");
+        // parts[0] is global stdout (before first test case)
+        const globalStdout = parts[0].trim();
+
+        const results = params.testCases.map((tc, index) => {
+            const caseOutputRaw = parts[index + 1] || "";
+
+            // Split into STDOUT and RVAL
+            const [caseStdoutRaw, caseRvalRaw] = caseOutputRaw.split("---RVAL---");
+
+            const caseStdout = caseStdoutRaw ? caseStdoutRaw.trim() : "";
+            let actual = caseRvalRaw ? caseRvalRaw.trim() : "undefined";
+
+            if (actual === "undefined" || actual === "null" || actual === "") {
+                actual = "(nil)";
+            }
+
+            const expected = tc.output.trim();
+            const passed = actual === expected || actual.replace(/\s/g, '') === expected.replace(/\s/g, '');
+
+            return {
+                input: tc.input,
+                expected: expected,
+                actual: actual,
+                stdout: caseStdout,
+                passed: passed
+            };
+        });
+
+        const allPassed = results.every(r => r.passed) && exitCode === 0;
+
+        return {
+            success: allPassed,
+            results: results,
+            compilerOutput: globalStdout
+        };
+
     } catch (error: any) {
-        clearTimeout(timeoutId);
         console.error("Evaluation Error:", error);
-        throw error;
+        return {
+            success: false,
+            results: [],
+            compilerOutput: `Error executing code: ${error.message}`
+        };
     }
 }
