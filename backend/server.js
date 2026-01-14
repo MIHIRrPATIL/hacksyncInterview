@@ -20,7 +20,18 @@ app.get('/health', (req, res) => {
 });
 
 // Socket.io initialization
-require('./socket')(io);
+const { init, rooms } = require('./socket');
+init(io);
+
+// Check if room exists
+app.get('/api/rooms/:roomId', (req, res) => {
+    const { roomId } = req.params;
+    if (rooms.has(roomId)) {
+        res.json({ exists: true });
+    } else {
+        res.status(404).json({ exists: false, message: 'Room not found' });
+    }
+});
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

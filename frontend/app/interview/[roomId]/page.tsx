@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { io } from 'socket.io-client';
 import InterviewNavbar from '@/components/interview/InterviewNavbar';
 import Lobby from '@/components/interview/Lobby';
@@ -12,7 +13,9 @@ const SOCKET_URL = 'http://localhost:5000';
 
 export default function InterviewPage({ params: paramsPromise }: { params: Promise<{ roomId: string }> }) {
   const params = use(paramsPromise);
+  const searchParams = useSearchParams();
   const roomId = params.roomId;
+  const username = searchParams.get('username') || `Candidate_${Math.floor(Math.random() * 1000)}`;
 
   const [socket, setSocket] = useState<any>(null);
   const [phase, setPhase] = useState<'lobby' | 'coding' | 'voice' | 'results'>('lobby');
@@ -27,7 +30,7 @@ export default function InterviewPage({ params: paramsPromise }: { params: Promi
     const newSocket = io(SOCKET_URL);
     setSocket(newSocket);
 
-    newSocket.emit('join-room', { roomId, username: `Candidate_${Math.floor(Math.random() * 1000)}` });
+    newSocket.emit('join-room', { roomId, username });
 
     newSocket.on('room-update', (room) => {
       setParticipants(room.participants);
