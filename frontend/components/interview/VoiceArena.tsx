@@ -99,10 +99,26 @@ const VoiceArena = ({ questions = [], onFinish }: VoiceArenaProps) => {
 
     vapi.on('message', (message: any) => {
       if (message.type === 'transcript' && message.transcriptType === 'final') {
-        setTranscript(prev => [...prev, { 
-          role: message.role === 'assistant' ? 'ai' : 'user', 
-          text: message.transcript 
-        }]);
+        setTranscript(prev => {
+          const newRole = message.role === 'assistant' ? 'ai' : 'user';
+          const newText = message.transcript;
+
+          if (prev.length === 0) {
+            return [{ role: newRole, text: newText }];
+          }
+
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg.role === newRole) {
+            // Merge with previous message
+            return [
+              ...prev.slice(0, -1),
+              { ...lastMsg, text: lastMsg.text + " " + newText }
+            ];
+          } else {
+            // New speaker bubble
+            return [...prev, { role: newRole, text: newText }];
+          }
+        });
       }
       if (message.type === 'error') {
           console.error("Vapi Message Error:", message);

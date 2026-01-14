@@ -87,7 +87,10 @@ export default function AIChatModal({ isOpen, onClose, currentCode, problem }: A
 
       const aiMessage: Message = { 
         role: 'assistant', 
-        content: data.choices?.[0]?.message?.content || "The AI returned an empty response. Please try again." 
+        content: (data.choices?.[0]?.message?.content || "The AI returned an empty response. Please try again.")
+          .replace(/(\*\*|__|'''|```|`)/g, '') // Strip markdown symbols
+          .replace(/###/g, '') // Strip headers
+          .trim()
       };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error: any) {

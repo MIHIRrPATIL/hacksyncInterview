@@ -26,7 +26,8 @@ const CodingArena = ({ problems = [], isDarkMode, setIsDarkMode, onFinishCoding 
   const problem = problems[currentIdx];
 
   const [language, setLanguage] = useState('javascript');
-  const [code, setCode] = useState(BOILERPLATES.javascript);
+  // Initialize with dynamic boilerplate if available
+  const [code, setCode] = useState(problems[0]?.boilerplates?.['javascript'] || BOILERPLATES.javascript);
   const [output, setOutput] = useState('');
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -34,7 +35,9 @@ const CodingArena = ({ problems = [], isDarkMode, setIsDarkMode, onFinishCoding 
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
-    setCode(BOILERPLATES[newLang] || "");
+    // Use AI-generated boilerplate if available, otherwise fallback to hardcoded defaults
+    const newCode = problem?.boilerplates?.[newLang] || BOILERPLATES[newLang] || "";
+    setCode(newCode);
     setIsSolved(false);
   };
 
@@ -84,7 +87,8 @@ const CodingArena = ({ problems = [], isDarkMode, setIsDarkMode, onFinishCoding 
   const handleNextQuestion = () => {
     if (currentIdx < problems.length - 1) {
       setCurrentIdx(prev => prev + 1);
-      setCode(BOILERPLATES[language] || BOILERPLATES.javascript);
+      const nextProblem = problems[currentIdx + 1];
+      setCode(nextProblem?.boilerplates?.[language] || BOILERPLATES[language] || BOILERPLATES.javascript);
       setOutput("");
       setIsSolved(false);
       toaster.create({

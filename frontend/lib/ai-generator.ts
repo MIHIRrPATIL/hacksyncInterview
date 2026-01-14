@@ -12,6 +12,11 @@ export interface DSAQuestion {
         input: string;
         output: string;
     }>;
+    boilerplates?: {
+        javascript: string;
+        python: string;
+        cpp: string;
+    };
 }
 
 export interface VoiceQuestion {
@@ -44,7 +49,11 @@ export async function generateInterviewContent(config: {
        - description (with technical constraints)
        - difficulty (${config.difficulty})
        - example (input and output strings)
-       - testCases (at least 3 sample test cases as an array of {input, output} objects)` : '1. SKIP DSA Questions. Do not generate any coding challenges.'}
+       - testCases (at least 3 sample test cases as an array of {input, output} objects)
+       - boilerplates: An object containing starter code for "javascript", "python", and "cpp".
+         * javascript: e.g. "function solve(arg1) {\\n  // code\\n}"
+         * python: e.g. "def solve(arg1):\\n    pass"
+         * cpp: e.g. "int solve(int arg1) {\\n    return 0;\\n}"` : '1. SKIP DSA Questions. Do not generate any coding challenges.'}
     
     2. ${config.vivaCount} Voice/Viva Questions. Each must have:
        - question
@@ -55,7 +64,7 @@ export async function generateInterviewContent(config: {
     Format:
     {
       "dsa": [
-        ${config.dsaCount > 0 ? '{ "title": "...", "description": "...", "difficulty": "...", "example": { "input": "...", "output": "..." }, "testCases": [{ "input": "...", "output": "..." }] }' : ''}
+        ${config.dsaCount > 0 ? '{ "title": "...", "description": "...", "difficulty": "...", "example": { "input": "...", "output": "..." }, "testCases": [{ "input": "...", "output": "..." }], "boilerplates": { "javascript": "...", "python": "...", "cpp": "..." } }' : ''}
       ],
       "voice": [
         { "question": "...", "answer": "..." }

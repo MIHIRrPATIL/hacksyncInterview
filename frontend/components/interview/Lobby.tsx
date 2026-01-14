@@ -6,7 +6,9 @@ import {
   UserCheck, 
   Zap, 
   Radio, 
-  Users 
+  Users,
+  Copy,
+  MessageCircle
 } from 'lucide-react';
 
 interface Participant {
@@ -119,6 +121,37 @@ const Lobby = ({ roomId, participants, onReady }: { roomId: string, participants
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Invite Section */}
+          <div className="mt-8 pt-8 border-t border-gray-100">
+             <h3 className="text-sm font-black text-black/40 uppercase tracking-widest mb-4">Invite Others</h3>
+             <div className="flex gap-3">
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    // could add a toast here ideally
+                    const btn = document.getElementById('copy-btn-text');
+                    if (btn) btn.innerText = 'Copied!';
+                    setTimeout(() => { if (btn) btn.innerText = 'Copy Link'; }, 2000);
+                  }}
+                  className="flex-1 py-3 px-4 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 rounded-xl font-bold text-black hover:text-orange-600 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <Copy size={16} className="text-black/30 group-hover:text-orange-500" />
+                  <span id="copy-btn-text">Copy Link</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    const url = encodeURIComponent(window.location.href);
+                    const text = encodeURIComponent("Join me for a mock interview session on SkillSphere! 🚀");
+                    window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
+                  }}
+                  className="flex-1 py-3 px-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/20 rounded-xl font-bold text-[#25D366] transition-all flex items-center justify-center gap-2"
+                >
+                  <MessageCircle size={16} />
+                  WhatsApp
+                </button>
+             </div>
           </div>
         </div>
       </div>
