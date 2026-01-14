@@ -96,7 +96,7 @@ export default function Dashboard() {
     const cleanedRoomId = roomToJoin.trim().toUpperCase();
 
     try {
-      const res = await fetch(`http://localhost:5000/api/rooms/${cleanedRoomId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/rooms/${cleanedRoomId}`);
       if (res.ok) {
         router.push(`/interview/${cleanedRoomId}?username=${encodeURIComponent(username)}`);
       } else {

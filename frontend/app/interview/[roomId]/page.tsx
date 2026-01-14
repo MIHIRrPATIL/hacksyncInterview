@@ -12,7 +12,7 @@ import { generateInterviewContent, InterviewContent } from '@/lib/ai-generator';
 import { toaster } from '@/components/ui/toaster';
 import { Brain } from 'lucide-react';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 export default function InterviewPage({ params: paramsPromise }: { params: Promise<{ roomId: string }> }) {
   const params = use(paramsPromise);

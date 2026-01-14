@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { io } from 'socket.io-client';
 import { generateEvaluationPDF } from '@/lib/pdf-generator';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 export default function ResultsPage({ params: paramsPromise }: { params: Promise<{ roomId: string }> }) {
   const params = use(paramsPromise);

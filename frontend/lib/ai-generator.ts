@@ -172,7 +172,7 @@ export async function evaluateCode(params: {
     try {
         const fullCode = generateDriverCode(params.code, params.language, params.testCases);
 
-        const response = await fetch("http://localhost:5000/api/execute", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/execute`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
