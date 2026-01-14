@@ -101,11 +101,11 @@ const MultiStepForm = React.forwardRef<HTMLDivElement, MultiStepFormProps>(
           <div>{footerContent}</div>
           <div className="flex gap-2">
             {currentStep > 1 && (
-              <Button variant="outline" onClick={onBack}>
+              <Button type="button" variant="outline" onClick={onBack}>
                 {backButtonText}
               </Button>
             )}
-            <Button onClick={onNext}>
+            <Button type="button" onClick={onNext}>
               {nextButtonText}
             </Button>
           </div>
