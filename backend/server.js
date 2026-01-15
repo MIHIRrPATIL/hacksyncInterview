@@ -95,6 +95,35 @@ app.get('/api/rooms', (req, res) => {
     res.json(availableRooms);
 });
 
+// Generate detailed evaluation report
+app.post('/api/evaluate/detailed', async (req, res) => {
+    const { participantData } = req.body;
+
+    if (!participantData) {
+        return res.status(400).json({ error: 'Participant data is required' });
+    }
+
+    try {
+        const DetailedEvaluationService = require('./services/detailedEvaluator');
+        const evaluator = new DetailedEvaluationService();
+
+        const detailedReport = await evaluator.generateDetailedReport(participantData);
+        const formattedReport = evaluator.formatEvaluationReport(detailedReport);
+
+        res.json({
+            success: true,
+            evaluation: detailedReport,
+            formatted: formattedReport
+        });
+    } catch (error) {
+        console.error('Detailed evaluation error:', error);
+        res.status(500).json({
+            error: 'Failed to generate detailed evaluation',
+            message: error.message
+        });
+    }
+});
+
 // Proxy Code Execution Endpoint
 app.post('/api/execute', async (req, res) => {
     const { language, code } = req.body;

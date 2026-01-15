@@ -36,7 +36,16 @@ module.exports = {
                 const participant = {
                     id: socket.id,
                     name: username || `Candidate ${room.participants.length + 1}`,
-                    isReady: false
+                    isReady: false,
+                    // Evaluation tracking
+                    dsaSubmissions: [],
+                    voiceAnswers: [],
+                    actions: [],
+                    penalties: {
+                        revealCode: 0,
+                        hints: 0,
+                        submissions: 0
+                    }
                 };
 
                 room.participants.push(participant);
@@ -80,6 +89,97 @@ module.exports = {
                     io.to(roomId).emit('start-interview', room);
                 } else {
                     io.to(roomId).emit('room-update', room);
+                }
+            });
+
+            // Track reveal code usage (heavy penalty: -5 points)
+            socket.on('reveal-code-used', ({ roomId, questionId }) => {
+                const room = rooms.get(roomId);
+                if (!room) return;
+
+                const participant = room.participants.find(p => p.id === socket.id);
+                if (participant) {
+                    participant.actions.push({
+                        type: 'reveal-code',
+                        questionId,
+                        timestamp: Date.now()
+                    });
+                    participant.penalties.revealCode += -5;
+                    console.log(`${participant.name} used reveal code on Q${questionId} (Penalty: -5)`);
+                }
+            });
+
+            // Track AI hint requests (penalty: -1 point per hint)
+            socket.on('ai-hint-requested', ({ roomId, questionId }) => {
+                const room = rooms.get(roomId);
+                if (!room) return;
+
+                const participant = room.participants.find(p => p.id === socket.id);
+                if (participant) {
+                    participant.actions.push({
+                        type: 'ai-hint',
+                        questionId,
+                        timestamp: Date.now()
+                    });
+                    participant.penalties.hints += -1;
+                    console.log(`${participant.name} requested AI hint on Q${questionId} (Penalty: -1)`);
+                }
+            });
+
+            // Track code submissions
+            socket.on('code-submission', ({ roomId, questionId, code, testResults, timeSpent }) => {
+                const room = rooms.get(roomId);
+                if (!room) return;
+
+                const participant = room.participants.find(p => p.id === socket.id);
+                if (participant) {
+                    // Find or create submission record
+                    let submission = participant.dsaSubmissions.find(s => s.questionId === questionId);
+                    if (!submission) {
+                        submission = {
+                            questionId,
+                            attempts: 0,
+                            revealCodeUsed: participant.actions.some(a => a.type === 'reveal-code' && a.questionId === questionId),
+                            hintsUsed: participant.actions.filter(a => a.type === 'ai-hint' && a.questionId === questionId).length
+                        };
+                        participant.dsaSubmissions.push(submission);
+                    }
+
+                    submission.attempts += 1;
+                    submission.lastCode = code;
+                    submission.lastTestResults = testResults;
+                    submission.timeSpent = timeSpent;
+
+                    // Apply submission penalty after 2 attempts
+                    if (submission.attempts > 2) {
+                        const additionalPenalty = -0.5;
+                        participant.penalties.submissions += additionalPenalty;
+                        console.log(`${participant.name} submission #${submission.attempts} on Q${questionId} (Penalty: ${additionalPenalty})`);
+                    }
+
+                    participant.actions.push({
+                        type: 'code-submission',
+                        questionId,
+                        timestamp: Date.now(),
+                        passed: testResults.every(t => t.passed)
+                    });
+                }
+            });
+
+            // Track voice answers
+            socket.on('voice-answer-submitted', ({ roomId, questionId, transcript, duration }) => {
+                const room = rooms.get(roomId);
+                if (!room) return;
+
+                const participant = room.participants.find(p => p.id === socket.id);
+                if (participant) {
+                    participant.voiceAnswers.push({
+                        questionId,
+                        transcript,
+                        duration,
+                        timestamp: Date.now()
+                    });
+                    console.log(`${participant.name} submitted voice answer for Q${questionId}`);
                 }
             });
 
