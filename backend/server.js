@@ -105,6 +105,8 @@ app.post('/api/execute', async (req, res) => {
 
     try {
         const executionUrl = process.env.EXECUTION_API_URL;
+        console.log('EXECUTION_API_URL from env:', executionUrl);
+
         if (!executionUrl || executionUrl.includes('ip-addr')) {
             console.warn("EXECUTION_API_URL not configured properly.");
             return res.status(500).json({ error: 'Server configuration error: EXECUTION_API_URL missing' });
@@ -130,13 +132,19 @@ app.post('/api/execute', async (req, res) => {
             files: [{ content: code }]
         };
 
+        console.log('Sending request to:', executionUrl);
+        console.log('Payload:', JSON.stringify(payload, null, 2));
+
         const response = await axios.post(executionUrl, payload, {
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 30000 // 30 second timeout
         });
 
+        console.log('Execution response received:', response.status);
         res.json(response.data);
     } catch (error) {
         console.error("Execution API Error:", error.message);
+        console.error("Error details:", error.response?.data || error);
         // If the external service fails, return a formatted error
         res.status(500).json({
             run: {
