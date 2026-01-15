@@ -122,8 +122,13 @@ export async function generateInterviewContent(config: {
                 voice: content.voice || []
             };
         } catch (parseError) {
-            console.error("JSON Parse Error on:", cleanJson);
-            throw parseError;
+            console.error("JSON Parse Error. First 500 chars:", cleanJson.substring(0, 500));
+            console.error("Last 500 chars:", cleanJson.substring(cleanJson.length - 500));
+            console.error("Parse error:", parseError);
+
+            // Fallback: return empty content
+            console.warn("Using fallback empty content due to parse error");
+            return { dsa: [], voice: [] };
         }
     } catch (error: any) {
         clearTimeout(timeoutId);
@@ -137,11 +142,64 @@ export async function generateInterviewContent(config: {
 }
 
 const generateDriverCode = (code: string, language: string, testCases: any[]) => {
-    // Basic parser for inputs
+    // Smart parser that respects arrays, objects, and quotes
     const parseInput = (inputStr: string) => {
-        return inputStr.split(',').map(part => {
-            const eqParts = part.split('=');
-            return eqParts.length > 1 ? eqParts[1].trim() : eqParts[0].trim();
+        const args: string[] = [];
+        let current = '';
+        let depth = 0;
+        let inQuotes = false;
+        let quoteChar = '';
+
+        for (let i = 0; i < inputStr.length; i++) {
+            const char = inputStr[i];
+
+            // Handle quotes
+            if ((char === '"' || char === "'") && (i === 0 || inputStr[i - 1] !== '\\')) {
+                if (!inQuotes) {
+                    inQuotes = true;
+                    quoteChar = char;
+                } else if (char === quoteChar) {
+                    inQuotes = false;
+                }
+                current += char;
+                continue;
+            }
+
+            // Track bracket depth
+            if (!inQuotes) {
+                if (char === '[' || char === '{' || char === '(') depth++;
+                if (char === ']' || char === '}' || char === ')') depth--;
+
+                // Split on comma only at depth 0
+                if (char === ',' && depth === 0) {
+                    args.push(current.trim());
+                    current = '';
+                    continue;
+                }
+            }
+
+            current += char;
+        }
+
+        if (current.trim()) {
+            args.push(current.trim());
+        }
+
+        // Process each argument
+        return args.map(arg => {
+            // Remove parameter name if present (e.g., "nums = [1,2,3]" -> "[1,2,3]")
+            const eqIndex = arg.indexOf('=');
+            const value = eqIndex !== -1 ? arg.substring(eqIndex + 1).trim() : arg.trim();
+
+            // If already quoted, array, object, number, or boolean, return as-is
+            if (value.startsWith('"') || value.startsWith("'") ||
+                value.startsWith('[') || value.startsWith('{') ||
+                !isNaN(Number(value)) || value === 'true' || value === 'false') {
+                return value;
+            }
+
+            // Otherwise wrap in quotes (plain string)
+            return `"${value}"`;
         }).join(', ');
     };
 
@@ -210,7 +268,27 @@ export async function evaluateCode(params: {
             }
 
             const expected = tc.output.trim();
-            const passed = actual === expected || actual.replace(/\s/g, '') === expected.replace(/\s/g, '');
+
+            // Normalize both values for comparison
+            let normalizedActual = actual;
+            let normalizedExpected = expected;
+
+            try {
+                // Try to parse both as JSON to compare actual values
+                const parsedActual = JSON.parse(actual);
+                const parsedExpected = JSON.parse(expected);
+                normalizedActual = JSON.stringify(parsedActual);
+                normalizedExpected = JSON.stringify(parsedExpected);
+            } catch {
+                // If parsing fails, compare as strings
+                // Remove quotes from actual if it's a JSON string
+                if (actual.startsWith('"') && actual.endsWith('"')) {
+                    normalizedActual = actual.slice(1, -1);
+                }
+            }
+
+            const passed = normalizedActual === normalizedExpected ||
+                normalizedActual.replace(/\s/g, '') === normalizedExpected.replace(/\s/g, '');
 
             return {
                 input: tc.input,
